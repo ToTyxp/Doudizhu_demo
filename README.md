@@ -1,6 +1,6 @@
-# YXP Dou Dizhu Demo
+# Dou Dizhu Demo
 
-YXP Dou Dizhu Demo is a local browser game for testing how different LLMs play Dou Dizhu against a human challenger. It includes a FastAPI backend, a vanilla HTML/CSS/JavaScript frontend, model-based AI seats, table talk, bilingual UI, and post-game AI recap.
+Dou Dizhu Demo is a local browser game for testing how different LLMs play Dou Dizhu against a human challenger. It includes a FastAPI backend, a vanilla HTML/CSS/JavaScript frontend, model-based AI seats, table talk, bilingual UI, and post-game AI recap.
 
 ## Features
 
