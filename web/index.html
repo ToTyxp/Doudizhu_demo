@@ -1,0 +1,1439 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YXP Dou Dizhu</title>
+    <style>
+      * { box-sizing: border-box; }
+      :root {
+        --felt: #17633f;
+        --felt-dark: #0d3d29;
+        --ink: #f8fbf4;
+        --muted: rgba(248, 251, 244, 0.68);
+        --line: rgba(248, 251, 244, 0.14);
+        --panel: rgba(8, 25, 18, 0.72);
+        --panel-soft: rgba(255, 255, 255, 0.08);
+        --gold: #f2c94c;
+        --blue: #79d3f2;
+        --red: #ef476f;
+        --card: #fffaf0;
+        --card-ink: #182018;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.10), transparent 32%),
+          linear-gradient(140deg, var(--felt), var(--felt-dark));
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      button, textarea {
+        font: inherit;
+      }
+      button {
+        border: 0;
+        border-radius: 7px;
+        min-height: 36px;
+        padding: 8px 12px;
+        background: var(--gold);
+        color: #172019;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.48;
+      }
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 18px 8px;
+        background: rgba(6, 18, 13, 0.54);
+      }
+      .brand {
+        display: grid;
+        gap: 2px;
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 21px;
+        letter-spacing: 0;
+      }
+      .status-line {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .top-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .role-strip {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        padding: 0 18px 12px;
+        background: rgba(6, 18, 13, 0.54);
+        border-bottom: 1px solid var(--line);
+      }
+      .role-strip h2 {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .ghost {
+        background: rgba(255, 255, 255, 0.10);
+        border: 1px solid var(--line);
+        color: var(--ink);
+      }
+      .game-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 14px;
+        padding: 14px;
+        min-height: 0;
+      }
+      .table-zone {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: auto minmax(300px, 1fr) auto;
+        gap: 12px;
+      }
+      .opponents {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .seat {
+        position: relative;
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+      }
+      .seat.current {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 2px rgba(242, 201, 76, 0.16);
+      }
+      .seat.landlord::after {
+        content: attr(data-landlord);
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        border-radius: 999px;
+        padding: 3px 8px;
+        background: rgba(242, 201, 76, 0.18);
+        color: var(--gold);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .seat-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        min-width: 0;
+      }
+      .seat-name {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+      .seat-name strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .seat-meta {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .count-badge {
+        flex: 0 0 auto;
+        min-width: 54px;
+        border-radius: 7px;
+        padding: 7px 8px;
+        background: rgba(0, 0, 0, 0.24);
+        text-align: center;
+        font-weight: 900;
+      }
+      .mini-hand {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        min-height: 38px;
+        margin-top: 12px;
+        overflow: hidden;
+      }
+      .card-back {
+        width: 34px;
+        height: 48px;
+        border-radius: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.42);
+        background:
+          radial-gradient(circle at center, rgba(255, 238, 173, 0.55) 0 18%, transparent 19%),
+          linear-gradient(135deg, rgba(255, 255, 255, 0.22) 25%, transparent 25%) 0 0 / 9px 9px,
+          linear-gradient(160deg, #d51f48, #7d1230);
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.24);
+      }
+      .table {
+        min-height: 360px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        background:
+          radial-gradient(circle at center, rgba(255, 255, 255, 0.10), transparent 54%),
+          rgba(3, 18, 12, 0.28);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 12px;
+        padding: 16px;
+      }
+      .table-actions {
+        width: min(460px, 100%);
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .table-actions:empty {
+        display: none;
+      }
+      .table-taunt {
+        width: min(620px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.22);
+        padding: 10px;
+      }
+      .table-taunt:empty {
+        display: none;
+      }
+      .bottom-cards {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 70px;
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(242, 201, 76, 0.15), rgba(121, 211, 242, 0.08)),
+          rgba(0, 0, 0, 0.18);
+        border: 1px solid rgba(242, 201, 76, 0.28);
+        padding: 8px 10px;
+      }
+      .bottom-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        margin-right: 4px;
+      }
+      .bottom-rack {
+        display: flex;
+        gap: 7px;
+      }
+      .table-center {
+        display: grid;
+        place-items: center;
+        text-align: center;
+        gap: 10px;
+      }
+      .last-play {
+        min-width: min(520px, 100%);
+        border-radius: 8px;
+        padding: 12px 14px 14px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent),
+          rgba(0, 0, 0, 0.24);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+      }
+      .last-play-title {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 10px;
+      }
+      .last-play-cards {
+        min-height: 58px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 900;
+      }
+      .last-play-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .last-play-row.previous {
+        opacity: 0.46;
+      }
+      .last-play-row-label {
+        min-width: 78px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-align: right;
+      }
+      .last-play-pass {
+        min-width: 44px;
+        border-radius: 7px;
+        border: 1px dashed rgba(255, 255, 255, 0.32);
+        padding: 8px 12px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 900;
+      }
+      .message {
+        min-height: 42px;
+        line-height: 1.45;
+        color: #fff8d8;
+      }
+      .player-zone {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+      }
+      .player-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .hand {
+        display: flex;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 5px;
+        min-height: 92px;
+      }
+      .human-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .human-actions:empty {
+        display: none;
+      }
+      .card {
+        width: 46px;
+        height: 62px;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        border-radius: 7px;
+        background: var(--card);
+        color: var(--card-ink);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+        font-weight: 900;
+        line-height: 1;
+      }
+      .card.red-card {
+        color: #b42034;
+      }
+      .card.joker-card {
+        font-size: 10px;
+        letter-spacing: 0;
+        writing-mode: vertical-rl;
+      }
+      .card.selected {
+        background: #ffe5ec;
+        color: #b42034;
+        transform: translateY(-10px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+      }
+      .table-card {
+        width: 40px;
+        height: 54px;
+        display: grid;
+        place-items: center;
+        border-radius: 7px;
+        background: var(--card);
+        color: var(--card-ink);
+        font-weight: 900;
+        border: 1px solid rgba(0, 0, 0, 0.16);
+      }
+      .table-card.red-card {
+        color: #b42034;
+      }
+      .table-card.joker-card {
+        font-size: 10px;
+        letter-spacing: 0;
+        writing-mode: vertical-rl;
+      }
+      .side {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: auto;
+        gap: 10px;
+        max-height: calc(100vh - 92px);
+      }
+      .panel {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+      }
+      .panel h2 {
+        margin: 0 0 10px;
+        font-size: 15px;
+      }
+      .panel-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .panel-title-row h2 {
+        margin: 0;
+      }
+      .small-button {
+        min-height: 30px;
+        padding: 5px 9px;
+        font-size: 12px;
+      }
+      .characters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+        gap: 6px;
+      }
+      .character {
+        min-height: 44px;
+        text-align: left;
+        padding: 6px 8px;
+        background: var(--panel-soft);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .character.selected {
+        background: rgba(242, 201, 76, 0.20);
+        border-color: rgba(242, 201, 76, 0.62);
+      }
+      .character small {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .actions .wide {
+        grid-column: 1 / -1;
+      }
+      .thinking {
+        display: grid;
+        gap: 7px;
+        grid-column: 1 / -1;
+      }
+      .thinking-line {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .taunt-form {
+        display: grid;
+        gap: 8px;
+      }
+      .taunt-form.compact {
+        grid-template-columns: 1fr auto;
+        align-items: end;
+      }
+      .taunt-form.compact .target-row,
+      .taunt-form.compact .muted {
+        grid-column: 1 / -1;
+      }
+      .target-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .target {
+        background: var(--panel-soft);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .target.selected {
+        background: rgba(121, 211, 242, 0.22);
+        border-color: rgba(121, 211, 242, 0.70);
+      }
+      .taunt-input {
+        width: 100%;
+        min-height: 56px;
+        resize: vertical;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 7px;
+        padding: 9px;
+        background: rgba(255, 250, 240, 0.96);
+        color: #172019;
+      }
+      .taunt-input:disabled {
+        background: rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .history, .recap {
+        display: grid;
+        gap: 8px;
+        overflow: auto;
+      }
+      .history {
+        max-height: 280px;
+      }
+      .history.hidden-log {
+        display: none;
+      }
+      .bubble {
+        border-radius: 8px;
+        padding: 8px;
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+        line-height: 1.45;
+        font-size: 13px;
+      }
+      .bubble.human {
+        background: rgba(121, 211, 242, 0.16);
+        border-color: rgba(121, 211, 242, 0.38);
+      }
+      .bubble.ai {
+        background: rgba(242, 201, 76, 0.12);
+        border-color: rgba(242, 201, 76, 0.30);
+      }
+      .bubble-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 5px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .mood {
+        display: inline-block;
+        margin-left: 6px;
+        color: var(--gold);
+        font-weight: 900;
+      }
+      .history-play {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+      }
+      .recap {
+        display: none;
+        max-height: 320px;
+      }
+      .recap.show {
+        display: grid;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: none;
+        place-items: center;
+        padding: 18px;
+        background: rgba(0, 0, 0, 0.62);
+      }
+      .modal-backdrop.show {
+        display: grid;
+      }
+      .modal {
+        width: min(900px, 100%);
+        max-height: min(760px, 88vh);
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #092318;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+        padding: 16px;
+      }
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .modal-head h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .recap-card {
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel-soft);
+        padding: 10px;
+      }
+      .recap-item {
+        padding: 8px 0;
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .recap-item.taunted {
+        margin: 8px -6px 0;
+        padding: 8px 6px;
+        border-radius: 7px;
+        background: rgba(239, 71, 111, 0.20);
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .fact {
+        border-radius: 7px;
+        background: var(--panel-soft);
+        padding: 8px;
+        min-height: 54px;
+      }
+      .fact span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .fact strong {
+        display: block;
+        margin-top: 3px;
+        overflow-wrap: anywhere;
+      }
+      .muted { color: var(--muted); }
+      .err { color: #ffb4a2; }
+      .hidden { display: none !important; }
+      @media (max-width: 1060px) {
+        .game-shell {
+          grid-template-columns: 1fr;
+        }
+        .side {
+          max-height: none;
+          grid-template-rows: none;
+        }
+      }
+      @media (max-width: 700px) {
+        .topbar, .player-top, .seat-head {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .opponents, .target-row, .facts {
+          grid-template-columns: 1fr;
+        }
+        .role-strip {
+          grid-template-columns: 1fr;
+        }
+        .card {
+          width: 38px;
+          height: 56px;
+          padding: 0;
+        }
+        .table {
+          min-height: 300px;
+          padding: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <h1 id="appTitle">YXP Dou Dizhu</h1>
+          <div class="status-line" id="phaseLine">Loading...</div>
+        </div>
+        <div class="top-actions">
+          <button class="ghost" id="langToggle">English</button>
+          <button id="newGame"></button>
+        </div>
+      </header>
+      <section class="role-strip">
+        <h2 id="rolesTitle"></h2>
+        <div class="characters" id="characters"></div>
+      </section>
+
+      <main class="game-shell">
+        <section class="table-zone">
+          <div class="opponents" id="opponents"></div>
+
+          <section class="table">
+            <div class="bottom-cards" id="bottomCards"></div>
+            <div class="table-center">
+              <div class="last-play">
+                <div class="last-play-title" id="lastPlayTitle"></div>
+                <div class="last-play-cards" id="lastPlayCards"></div>
+              </div>
+              <div class="message" id="message">Loading...</div>
+              <div class="table-actions actions" id="tableActions"></div>
+              <div class="table-taunt" id="tableTaunt"></div>
+            </div>
+            <div class="facts" id="tableFacts"></div>
+          </section>
+
+          <section class="player-zone" id="humanSeat"></section>
+        </section>
+
+        <aside class="side">
+          <section class="panel">
+            <div class="panel-title-row">
+              <h2 id="historyTitle"></h2>
+              <button class="ghost small-button" id="historyToggle"></button>
+            </div>
+            <div class="history" id="history"></div>
+          </section>
+        </aside>
+      </main>
+
+      <div class="modal-backdrop" id="recapModal">
+        <section class="modal">
+          <div class="modal-head">
+            <h2 id="recapTitle"></h2>
+            <button class="ghost small-button" id="recapClose"></button>
+          </div>
+          <div class="recap" id="recap"></div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      let state = null;
+      let characters = [];
+      let selectedCharacters = ["qwen", "deepseek"];
+      let selected = new Set();
+      let aiBusy = false;
+      let aiStartedAt = null;
+      let aiMutter = "";
+      let tauntTarget = 1;
+      let tauntDraft = "";
+      let lang = localStorage.getItem("game_demo_lang") || "zh";
+      let historyOpen = false;
+      let recapClosedForWinner = null;
+      const AI_TIMEOUT_SECONDS = 15;
+      const TAB_ID = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const AI_LEASE_KEY = "game_demo_ai_step_lease";
+      const AI_LEASE_MS = 20000;
+
+      const dict = {
+        zh: {
+          app: "YXP 斗地主",
+          lang: "English",
+          newGame: "新局",
+          phase: "阶段",
+          phaseMap: { bidding: "叫地主", playing: "出牌", ended: "结算" },
+          roles: "模型角色 / Model Seats",
+          actions: "操作",
+          taunt: "嘴炮",
+          history: "对局记录",
+          recap: "AI 思考复盘 / AI Recap",
+          player: "座位",
+          challenger: "挑战者",
+          you: "挑战者",
+          landlord: "地主",
+          peasant: "农民",
+          undetermined: "未定",
+          cards: "张",
+          bid: "叫分",
+          biddingHint: "选择叫分后，这组按钮会自动收起。",
+          noBid: "不叫",
+          callScore: "叫 {score} 分",
+          play: "出牌",
+          pass: "过牌",
+          again: "再来一局",
+          waitingAi: "等待 AI",
+          thinking: "{name} 思考中... {seconds}s",
+          aiSoon: "马上轮到模型行动。",
+          selectedCards: "已选 {count} 张",
+          bottom: "底牌",
+          lastPlay: "上一手",
+          previousPlay: "上上手",
+          lastPlayer: "上一手出牌",
+          passes: "连续过牌",
+          noCards: "无",
+          hiddenCards: "暗牌",
+          chooseTwo: "请选择 2 个可用 AI 角色",
+          missing: "缺少 {env}",
+          unavailable: "不可用",
+          targetBlocked: "这个 AI 本回合已经被嘴炮过，等他行动后再来。",
+          tauntHint: "会注入目标 AI 的下一次决策。",
+          tauntReady: "可以发送：会进入目标 AI 的下一次决策。",
+          tauntLocked: "暂时不能发送：等目标 AI 行动后再开口。",
+          tauntThinking: "目标正在思考，这句话赶不上当前决策，等他行动完再说。",
+          tauntPlaceholder: "对目标 AI 说点什么...",
+          sendTaunt: "发送嘴炮",
+          tauntLabel: "嘴炮",
+          taunted: "已命中",
+          waitTurn: "等他出完这手再说",
+          noHistory: "暂无历史",
+          showHistory: "显示",
+          hideHistory: "隐藏",
+          noRecap: "游戏结束后显示。",
+          close: "关闭",
+          noThoughts: "没有记录到思考。",
+          playerSaid: "玩家说",
+          thought: "思考",
+          reason: "原因",
+          assessment: "判断",
+          actionBid: "叫分 {score}",
+          actionPass: "过",
+          actionPlay: "{cards}",
+          loadingFailed: "拉取失败: {message}",
+          statusBidding: "轮到 {name} 叫分。",
+          statusPlaying: "轮到 {name} 出牌。",
+          statusEnded: "{name} 出完手牌，{team}获胜。",
+        },
+        en: {
+          app: "YXP Dou Dizhu",
+          lang: "中文",
+          newGame: "New Game",
+          phase: "Phase",
+          phaseMap: { bidding: "Bidding", playing: "Playing", ended: "Finished" },
+          roles: "Model Seats / 模型角色",
+          actions: "Actions",
+          taunt: "Table Talk",
+          history: "Hand Log",
+          recap: "AI Recap / AI 思考复盘",
+          player: "Seat",
+          challenger: "Challenger",
+          you: "Challenger",
+          landlord: "Landlord",
+          peasant: "Peasant",
+          undetermined: "Unset",
+          cards: "cards",
+          bid: "bid",
+          biddingHint: "Choose a bid; this control will disappear afterward.",
+          noBid: "Pass Bid",
+          callScore: "Bid {score}",
+          play: "Play",
+          pass: "Pass",
+          again: "Play Again",
+          waitingAi: "Waiting for AI",
+          thinking: "{name} thinking... {seconds}s",
+          aiSoon: "The model will act next.",
+          selectedCards: "{count} selected",
+          bottom: "Kitty",
+          lastPlay: "Last Play",
+          previousPlay: "Previous Play",
+          lastPlayer: "Last Actor",
+          passes: "Pass Chain",
+          noCards: "None",
+          hiddenCards: "hidden",
+          chooseTwo: "Choose 2 available AI models",
+          missing: "Missing {env}",
+          unavailable: "Unavailable",
+          targetBlocked: "This AI has already received table talk this turn.",
+          tauntHint: "Sent into the target AI's next decision.",
+          tauntReady: "Ready: this will enter the target AI's next decision.",
+          tauntLocked: "Locked: wait until the target AI acts.",
+          tauntThinking: "The target is already thinking; wait until this action resolves.",
+          tauntPlaceholder: "Say something to the target AI...",
+          sendTaunt: "Send",
+          tauntLabel: "Table Talk",
+          taunted: "Hit",
+          waitTurn: "Wait until this AI acts.",
+          noHistory: "No log yet",
+          showHistory: "Show",
+          hideHistory: "Hide",
+          noRecap: "Shown after the game ends.",
+          close: "Close",
+          noThoughts: "No thoughts recorded.",
+          playerSaid: "Player said",
+          thought: "Thought",
+          reason: "Reason",
+          assessment: "Assessment",
+          actionBid: "Bid {score}",
+          actionPass: "Pass",
+          actionPlay: "{cards}",
+          loadingFailed: "Failed to load: {message}",
+          statusBidding: "{name} to bid.",
+          statusPlaying: "{name}'s turn.",
+          statusEnded: "{name} emptied their hand. {team} win.",
+        },
+      };
+
+      const aiMutters = {
+        zh: [
+          "先看牌权，再看能不能顺手压住。",
+          "这手别急，牌权比面子重要。",
+          "小牌要走，大牌也得留一口气。",
+          "先稳住，别给对面轻松过牌。",
+        ],
+        en: [
+          "Checking tempo before spending a high card.",
+          "No rush. Control matters more than pride.",
+          "Unload small cards, keep enough pressure.",
+          "Stay steady and avoid giving away tempo.",
+        ],
+      };
+
+      const redRanks = new Set(["♥", "♦"]);
+
+      function t(key, vars = {}) {
+        const value = key.split(".").reduce((obj, part) => obj?.[part], dict[lang]) ?? key;
+        return String(value).replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? "");
+      }
+
+      async function api(path, body) {
+        const payload = body ? { ...body } : null;
+        if (payload && path === "/api/new-game") payload.output_language = lang;
+        if (payload && path === "/api/ai-step") payload.output_language = lang;
+        const options = body
+          ? {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            }
+          : {};
+        const res = await fetch(path, options);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "HTTP " + res.status);
+        state = data;
+        selected.clear();
+        render();
+        maybeAdvanceAi();
+      }
+
+      async function poll() {
+        try {
+          const res = await fetch("/api/state");
+          state = await res.json();
+          render();
+          maybeAdvanceAi();
+        } catch (e) {
+          setError(t("loadingFailed", { message: e.message }));
+        }
+      }
+
+      async function loadCharacters() {
+        const res = await fetch("/api/characters");
+        const data = await res.json();
+        characters = data.characters || [];
+        selectedCharacters = selectedCharacters.filter((id) =>
+          characters.some((c) => c.id === id && c.available)
+        );
+        for (const c of characters) {
+          if (selectedCharacters.length >= 2) break;
+          if (c.available && !selectedCharacters.includes(c.id)) selectedCharacters.push(c.id);
+        }
+        renderCharacters();
+      }
+
+      function render() {
+        renderStaticLabels();
+        renderCharacters();
+        if (!state) return;
+        document.getElementById("phaseLine").textContent = `${t("phase")}: ${t("phaseMap." + state.phase)}`;
+        const message = document.getElementById("message");
+        message.textContent = statusMessage();
+        message.classList.remove("err");
+        renderSeats();
+        renderTable();
+        renderActions();
+        renderTaunt();
+        renderHistory();
+        renderRecap();
+      }
+
+      function renderStaticLabels() {
+        document.documentElement.lang = lang === "zh" ? "zh" : "en";
+        document.title = t("app");
+        document.getElementById("appTitle").textContent = t("app");
+        document.getElementById("langToggle").textContent = t("lang");
+        document.getElementById("newGame").textContent = t("newGame");
+        document.getElementById("rolesTitle").textContent = t("roles");
+        document.getElementById("historyTitle").textContent = t("history");
+        document.getElementById("recapTitle").textContent = t("recap");
+        document.getElementById("recapClose").textContent = t("close");
+        document.getElementById("historyToggle").textContent = historyOpen ? t("hideHistory") : t("showHistory");
+        if (!state) document.getElementById("phaseLine").textContent = "Loading...";
+      }
+
+      function renderCharacters() {
+        const root = document.getElementById("characters");
+        root.innerHTML = characters
+          .map((c) => {
+            const selectedClass = selectedCharacters.includes(c.id) ? " selected" : "";
+            return `<button class="character${selectedClass}" data-character="${c.id}" ${c.available ? "" : "disabled"}>
+              ${escapeHtml(c.name)}
+              <small>${c.available ? escapeHtml(c.tagline) : t("missing", { env: c.required_env })}</small>
+            </button>`;
+          })
+          .join("");
+        root.querySelectorAll("[data-character]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.character;
+            if (selectedCharacters.includes(id)) {
+              selectedCharacters = selectedCharacters.filter((x) => x !== id);
+            } else {
+              selectedCharacters.push(id);
+              selectedCharacters = selectedCharacters.slice(-2);
+            }
+            renderCharacters();
+          });
+        });
+      }
+
+      function renderSeats() {
+        const players = state.players || [];
+        const aiPlayers = players.filter((p) => !p.is_human);
+        document.getElementById("opponents").innerHTML = aiPlayers.map(renderOpponentSeat).join("");
+        const human = players.find((p) => p.is_human) || players[0];
+        document.getElementById("humanSeat").innerHTML = renderHumanSeat(human);
+        document.querySelectorAll("[data-card]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = Number(btn.dataset.card);
+            if (selected.has(id)) selected.delete(id);
+            else selected.add(id);
+            renderSeats();
+            renderActions();
+          });
+        });
+      }
+
+      function renderOpponentSeat(p) {
+        const backCount = Math.min(p.hand_count, 14);
+        return `<article class="seat ${p.is_current ? "current" : ""} ${p.is_landlord ? "landlord" : ""}" data-landlord="${t("landlord")}">
+          <div class="seat-head">
+            <div class="seat-name">
+              <strong>${escapeHtml(p.name)}</strong>
+              <span class="seat-meta">${roleLabel(p.role)} · ${t("bid")} ${p.bid ?? "-"}</span>
+            </div>
+            <div class="count-badge">${p.hand_count}<br><span class="seat-meta">${t("cards")}</span></div>
+          </div>
+          <div class="mini-hand" aria-label="${p.hand_count} ${t("hiddenCards")}">
+            ${Array.from({ length: backCount }, () => `<span class="card-back"></span>`).join("")}
+          </div>
+        </article>`;
+      }
+
+      function renderHumanSeat(p) {
+        if (!p) return "";
+        const active = state.phase === "playing" && p.id === state.current_player;
+        return `<div class="player-top">
+          <div>
+            <strong>${t("challenger")}</strong>
+            <div class="seat-meta">${roleLabel(p.role)} · ${t("bid")} ${p.bid ?? "-"} · ${p.hand_count} ${t("cards")}</div>
+          </div>
+          <div class="seat-meta">${active ? t("selectedCards", { count: selected.size }) : ""}</div>
+        </div>
+        <div class="hand">
+          ${(p.hand || []).map((c) => renderCardButton(c, active)).join("")}
+        </div>
+        <div class="human-actions" id="humanActions"></div>`;
+      }
+
+      function renderCardButton(c, active) {
+        const selectedClass = selected.has(c.id) ? " selected" : "";
+        const redClass = isRedCard(c.label) ? " red-card" : "";
+        const jokerClass = isJoker(c.label) ? " joker-card" : "";
+        return `<button class="card${selectedClass}${redClass}${jokerClass}" ${active ? "" : "disabled"} data-card="${c.id}">${escapeHtml(displayCardLabel(c.label))}</button>`;
+      }
+
+      function renderTable() {
+        const bottomVisible = state.phase !== "bidding";
+        document.getElementById("bottomCards").innerHTML = `
+          <span class="bottom-label">${t("bottom")}</span>
+          <div class="bottom-rack">
+            ${bottomVisible
+              ? ((state.bottom || []).map((c) => renderTableCard(c.label)).join("") || `<span class="muted">${t("noCards")}</span>`)
+              : Array.from({ length: 3 }, () => `<span class="card-back"></span>`).join("")}
+          </div>
+        `;
+        const recentActions = latestPlayActions();
+        const lastPlayer = recentActions[0]
+          ? state.players?.find((p) => p.id === recentActions[0].player_id)
+          : state.players?.find((p) => p.id === state.last_play_player_id);
+        document.getElementById("lastPlayTitle").textContent = t("lastPlay");
+        document.getElementById("lastPlayCards").innerHTML = recentActions.length
+          ? recentActions.map((entry, index) => renderLastPlayRow(entry, index)).join("")
+          : `<span class="muted">${t("noCards")}</span>`;
+        document.getElementById("tableFacts").innerHTML = `
+          <div class="fact"><span>${t("lastPlayer")}</span><strong>${lastPlayer ? escapeHtml(displayName(lastPlayer)) : "-"}</strong></div>
+          <div class="fact"><span>${t("passes")}</span><strong>${state.consecutive_passes}</strong></div>
+        `;
+      }
+
+      function latestPlayActions() {
+        const actions = (state.played_history || []).filter((entry) =>
+          entry.phase === "playing" && (entry.action === "play" || entry.action === "pass")
+        );
+        if (actions.length) return actions.slice(-2).reverse();
+        if ((state.last_play || []).length) {
+          return [{ player_id: state.last_play_player_id, action: "play", cards: state.last_play }];
+        }
+        return [];
+      }
+
+      function renderLastPlayRow(entry, index) {
+        const player = state.players?.find((p) => p.id === entry.player_id);
+        const label = index === 0 ? t("lastPlay") : t("previousPlay");
+        const cards = (entry.cards || []).map((c) => renderTableCard(c.label)).join("");
+        const content = entry.action === "pass"
+          ? `<span class="last-play-pass">${t("actionPass")}</span>`
+          : cards || `<span class="muted">${t("noCards")}</span>`;
+        return `<div class="last-play-row ${index === 1 ? "previous" : ""}">
+          <span class="last-play-row-label">${label}</span>
+          <span class="seat-meta">${player ? escapeHtml(displayName(player)) : "-"}</span>
+          ${content}
+        </div>`;
+      }
+
+      function renderActions() {
+        const tableRoot = document.getElementById("tableActions");
+        const handRoot = document.getElementById("humanActions");
+        tableRoot.innerHTML = "";
+        if (handRoot) handRoot.innerHTML = "";
+        if (!state.current_player_is_human && state.phase !== "ended") {
+          const player = currentPlayer();
+          const elapsed = aiStartedAt ? Math.floor((Date.now() - aiStartedAt) / 1000) : 0;
+          const remaining = Math.max(0, AI_TIMEOUT_SECONDS - elapsed);
+          tableRoot.innerHTML = `<div class="thinking">
+            <button disabled>${aiBusy ? t("thinking", { name: player ? displayName(player) : "AI", seconds: remaining }) : t("waitingAi")}</button>
+            <div class="thinking-line">${t("aiSoon")}</div>
+          </div>`;
+          return;
+        }
+        if (state.phase === "bidding") {
+          tableRoot.innerHTML = [0, 1, 2, 3]
+            .map((score) => {
+              const disabled = score !== 0 && score <= state.current_top_bid;
+              const label = score === 0 ? t("noBid") : t("callScore", { score });
+              return `<button data-bid="${score}" ${disabled ? "disabled" : ""}>${label}</button>`;
+            })
+            .join("") + `<div class="thinking-line" style="grid-column:1 / -1">${t("biddingHint")}</div>`;
+          tableRoot.querySelectorAll("[data-bid]").forEach((btn) => {
+            btn.addEventListener("click", () =>
+              run(() => api("/api/bid", { player_id: state.current_player, score: Number(btn.dataset.bid) }))
+            );
+          });
+          return;
+        }
+        if (state.phase === "playing") {
+          if (!handRoot) return;
+          handRoot.innerHTML = `
+            <button id="playBtn" ${selected.size ? "" : "disabled"}>${t("play")} (${selected.size})</button>
+            <button id="passBtn" ${state.last_play_display ? "" : "disabled"}>${t("pass")}</button>
+          `;
+          document.getElementById("playBtn").addEventListener("click", () =>
+            run(() => api("/api/play", { player_id: state.current_player, cards: [...selected] }))
+          );
+          document.getElementById("passBtn").addEventListener("click", () =>
+            run(() => api("/api/pass", { player_id: state.current_player }))
+          );
+          return;
+        }
+        tableRoot.innerHTML = `<button class="wide" id="againBtn">${t("again")}</button>`;
+        document.getElementById("againBtn").addEventListener("click", () =>
+          run(() => api("/api/new-game", { ai_characters: selectedCharacters }))
+        );
+      }
+
+      function renderTaunt() {
+        const root = document.getElementById("tableTaunt");
+        const aiPlayers = (state.players || []).filter((p) => !p.is_human);
+        if (!aiPlayers.length) {
+          root.innerHTML = `<div class="muted">${t("unavailable")}</div>`;
+          return;
+        }
+        if (!aiPlayers.some((p) => p.id === tauntTarget)) tauntTarget = aiPlayers[0].id;
+        const blocked = new Set([...(state.taunted_this_turn || []), ...(state.pending_taunt_targets || [])]);
+        const targetBlocked = blocked.has(tauntTarget);
+        const targetThinking = aiBusy && state.current_player === tauntTarget;
+        const canType = state.phase !== "ended" && !targetBlocked && !targetThinking;
+        const disabled = !canType || !tauntDraft.trim();
+        const statusText = targetThinking ? t("tauntThinking") : canType ? t("tauntReady") : t("tauntLocked");
+        if (document.activeElement?.id === "tauntInput") {
+          const input = document.getElementById("tauntInput");
+          const btn = document.getElementById("tauntBtn");
+          const status = document.getElementById("tauntStatus");
+          if (input) input.disabled = !canType;
+          if (btn) btn.disabled = disabled;
+          if (status) status.textContent = statusText;
+          return;
+        }
+        root.innerHTML = `<div class="taunt-form compact">
+          <div class="target-row">
+            ${aiPlayers
+              .map((p) => {
+                const isBlocked = blocked.has(p.id);
+                return `<button class="target${p.id === tauntTarget ? " selected" : ""}" data-taunt-target="${p.id}" title="${isBlocked ? t("waitTurn") : ""}">
+                  ${escapeHtml(p.name)}${isBlocked ? " · " + t("taunted") : ""}
+                </button>`;
+              })
+              .join("")}
+          </div>
+          <textarea class="taunt-input" id="tauntInput" maxlength="300" placeholder="${t("tauntPlaceholder")}" ${canType ? "" : "disabled"}>${escapeHtml(canType ? tauntDraft : "")}</textarea>
+          <button id="tauntBtn" ${disabled ? "disabled" : ""}>${t("sendTaunt")}</button>
+          <div class="muted" id="tauntStatus">${statusText}</div>
+        </div>`;
+        root.querySelectorAll("[data-taunt-target]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            tauntTarget = Number(btn.dataset.tauntTarget);
+            renderTaunt();
+          });
+        });
+        document.getElementById("tauntInput").addEventListener("input", (e) => {
+          tauntDraft = e.target.value;
+          document.getElementById("tauntBtn").disabled = state.phase === "ended" || targetBlocked || !tauntDraft.trim();
+        });
+        document.getElementById("tauntBtn").addEventListener("click", () =>
+          run(async () => {
+            await api("/api/taunt", { target_seat: tauntTarget, message: tauntDraft });
+            tauntDraft = "";
+            renderTaunt();
+          })
+        );
+      }
+
+      function renderHistory() {
+        const root = document.getElementById("history");
+        root.classList.toggle("hidden-log", !historyOpen);
+        document.getElementById("historyToggle").textContent = historyOpen ? t("hideHistory") : t("showHistory");
+        const names = Object.fromEntries((state.players || []).map((p) => [p.id, displayName(p)]));
+        const events = [
+          ...(state.taunt_history || []).map((entry) => ({ kind: "taunt", seq: entry.seq, data: entry })),
+          ...(state.played_history || []).map((entry) => ({ kind: "action", seq: entry.seq, data: entry })),
+        ].sort((a, b) => a.seq - b.seq).slice(-50);
+        const rows = [];
+        for (const event of events) {
+          if (event.kind === "taunt") {
+            const entry = event.data;
+            rows.push(`<div class="bubble human">
+              <div class="bubble-head"><strong>${t("challenger")} → ${escapeHtml(entry.target_name)}</strong><span>${t("tauntLabel")}</span></div>
+              <div>${escapeHtml(entry.message)}</div>
+            </div>`);
+            continue;
+          }
+          const entry = event.data;
+          const name = names[entry.player_id] || `${t("player")} ${entry.player_id}`;
+          rows.push(`<div class="bubble ${entry.player_id === 0 ? "human" : "ai"}">
+            <div class="bubble-head"><strong>${escapeHtml(name)}</strong><span>${t("phaseMap." + entry.phase)}</span></div>
+            <div>${historyActionHtml(entry)}</div>
+          </div>`);
+        }
+        root.innerHTML = rows.join("") || `<div class="muted">${t("noHistory")}</div>`;
+        root.scrollTop = root.scrollHeight;
+      }
+
+      function renderRecap() {
+        const root = document.getElementById("recap");
+        if (state.phase !== "ended") {
+          root.classList.remove("show");
+          root.innerHTML = `<div class="muted">${t("noRecap")}</div>`;
+          document.getElementById("recapModal").classList.remove("show");
+          recapClosedForWinner = null;
+          return;
+        }
+        root.classList.add("show");
+        const aiPlayers = (state.players || []).filter((p) => !p.is_human);
+        root.innerHTML = aiPlayers.map((p) => {
+          const items = (state.played_history || []).filter((entry) =>
+            entry.player_id === p.id && (entry.reason || entry.opponents_assessment || entry.mood || entry.taunt_received || entry.thought_process)
+          );
+          return `<article class="recap-card">
+            <strong>${escapeHtml(p.name)}</strong>
+            ${items.map((entry) => `<div class="recap-item ${entry.taunt_received ? "taunted" : ""}">
+              <div>${historyActionHtml(entry)}${entry.mood ? `<span class="mood">${escapeHtml(entry.mood)}</span>` : ""}</div>
+              ${entry.taunt_received ? `<div>${t("playerSaid")}: ${escapeHtml(entry.taunt_received)}</div>` : ""}
+              ${entry.reason ? `<div>${t("reason")}: ${escapeHtml(entry.reason)}</div>` : ""}
+              ${entry.thought_process ? `<div>${t("thought")}: ${escapeHtml(entry.thought_process)}</div>` : ""}
+              ${entry.opponents_assessment ? `<div class="muted">${t("assessment")}: ${escapeHtml(entry.opponents_assessment)}</div>` : ""}
+            </div>`).join("") || `<div class="recap-item muted">${t("noThoughts")}</div>`}
+          </article>`;
+        }).join("");
+        if (recapClosedForWinner !== state.winner_id) {
+          document.getElementById("recapModal").classList.add("show");
+        }
+      }
+
+      function historyActionText(entry) {
+        if (entry.action === "bid") return t("actionBid", { score: entry.bid_score });
+        if (entry.action === "pass") return t("actionPass");
+        return t("actionPlay", { cards: entry.cards_display || t("play") });
+      }
+
+      function historyActionHtml(entry) {
+        if (entry.action === "bid" || entry.action === "pass") {
+          return escapeHtml(historyActionText(entry));
+        }
+        const cards = Array.isArray(entry.cards) ? entry.cards : [];
+        const renderedCards = cards.length
+          ? cards.map((card) => renderTableCard(card.label)).join("")
+          : renderTextCards(entry.cards_display || "");
+        return renderedCards
+          ? `<div class="history-play">${renderedCards}</div>`
+          : escapeHtml(t("play"));
+      }
+
+      function roleLabel(role) {
+        return t(role || "undetermined");
+      }
+
+      function displayName(player) {
+        return player?.is_human ? t("challenger") : player?.name || "-";
+      }
+
+      function statusMessage() {
+        if (!state) return "";
+        if (state.phase === "ended") {
+          const winner = (state.players || []).find((p) => p.id === state.winner_id);
+          const team = state.winning_team === "landlord" ? t("landlord") : t("peasant");
+          return t("statusEnded", { name: displayName(winner), team });
+        }
+        const current = (state.players || []).find((p) => p.id === state.current_player);
+        if (state.phase === "bidding") return t("statusBidding", { name: displayName(current) });
+        return t("statusPlaying", { name: displayName(current) });
+      }
+
+      function renderTextCards(text) {
+        return String(text)
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((label) => renderTableCard(label))
+          .join("");
+      }
+
+      function renderTableCard(label) {
+        return `<span class="table-card ${isRedCard(label) ? "red-card" : ""}${isJoker(label) ? " joker-card" : ""}">${escapeHtml(displayCardLabel(label))}</span>`;
+      }
+
+      function displayCardLabel(label) {
+        if (label === "大王") return "RED JOKER";
+        if (label === "小王") return "BLACK JOKER";
+        return label;
+      }
+
+      function isJoker(label) {
+        return label === "大王" || label === "小王";
+      }
+
+      function isRedCard(label) {
+        return label === "大王" || String(label).includes("♥") || String(label).includes("♦");
+      }
+
+      async function maybeAdvanceAi() {
+        if (!state || aiBusy || state.phase === "ended" || state.current_player_is_human) return;
+        if (!claimAiLease()) return;
+        aiBusy = true;
+        aiStartedAt = Date.now();
+        const lines = aiMutters[lang] || aiMutters.zh;
+        aiMutter = lines[Math.floor(Math.random() * lines.length)];
+        renderActions();
+        try {
+          await api("/api/ai-step", {});
+        } catch (e) {
+          setError(e.message);
+        } finally {
+          aiBusy = false;
+          aiStartedAt = null;
+          aiMutter = "";
+          releaseAiLease();
+          renderActions();
+        }
+      }
+
+      function claimAiLease() {
+        try {
+          const now = Date.now();
+          const current = JSON.parse(localStorage.getItem(AI_LEASE_KEY) || "null");
+          if (current && current.owner !== TAB_ID && current.expiresAt > now) return false;
+          localStorage.setItem(AI_LEASE_KEY, JSON.stringify({ owner: TAB_ID, expiresAt: now + AI_LEASE_MS }));
+          const verify = JSON.parse(localStorage.getItem(AI_LEASE_KEY) || "null");
+          return verify?.owner === TAB_ID;
+        } catch {
+          return true;
+        }
+      }
+
+      function releaseAiLease() {
+        try {
+          const current = JSON.parse(localStorage.getItem(AI_LEASE_KEY) || "null");
+          if (current?.owner === TAB_ID) localStorage.removeItem(AI_LEASE_KEY);
+        } catch {}
+      }
+
+      function currentPlayer() {
+        return (state?.players || []).find((p) => p.id === state.current_player);
+      }
+
+      function setError(message) {
+        const root = document.getElementById("message");
+        root.textContent = message;
+        root.classList.add("err");
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      async function run(fn) {
+        try {
+          await fn();
+        } catch (e) {
+          setError(e.message);
+        }
+      }
+
+      document.getElementById("langToggle").addEventListener("click", () => {
+        lang = lang === "zh" ? "en" : "zh";
+        localStorage.setItem("game_demo_lang", lang);
+        render();
+      });
+
+      document.getElementById("historyToggle").addEventListener("click", () => {
+        historyOpen = !historyOpen;
+        renderHistory();
+        renderStaticLabels();
+      });
+
+      document.getElementById("recapClose").addEventListener("click", () => {
+        recapClosedForWinner = state?.winner_id ?? null;
+        document.getElementById("recapModal").classList.remove("show");
+      });
+
+      document.getElementById("newGame").addEventListener("click", () => {
+        if (selectedCharacters.length !== 2) {
+          setError(t("chooseTwo"));
+          return;
+        }
+        run(() => api("/api/new-game", { ai_characters: selectedCharacters }));
+      });
+
+      renderStaticLabels();
+      loadCharacters();
+      poll();
+      setInterval(poll, 2000);
+      setInterval(() => {
+        if (aiBusy) renderActions();
+      }, 250);
+    </script>
+  </body>
+</html>
