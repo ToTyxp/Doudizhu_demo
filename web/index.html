@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -729,7 +729,7 @@
       let aiMutter = "";
       let tauntTarget = 1;
       let tauntDraft = "";
-      let lang = localStorage.getItem("game_demo_lang") || "zh";
+      let lang = "en";
       let historyOpen = false;
       let recapClosedForWinner = null;
       const AI_TIMEOUT_SECONDS = 15;
@@ -1404,7 +1404,6 @@
 
       document.getElementById("langToggle").addEventListener("click", () => {
         lang = lang === "zh" ? "en" : "zh";
-        localStorage.setItem("game_demo_lang", lang);
         render();
       });
 

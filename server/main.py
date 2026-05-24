@@ -37,11 +37,11 @@ class PassRequest(BaseModel):
 
 class NewGameRequest(BaseModel):
     ai_characters: list[str] = Field(default_factory=lambda: ["qwen", "deepseek"])
-    output_language: str = "zh"
+    output_language: str = "en"
 
 
 class AiStepRequest(BaseModel):
-    output_language: str = "zh"
+    output_language: str = "en"
 
 
 @app.get("/api/state")
