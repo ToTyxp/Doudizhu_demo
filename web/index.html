@@ -774,7 +774,7 @@
           passes: "连续过牌",
           noCards: "无",
           hiddenCards: "暗牌",
-          chooseTwo: "请选择 2 个可用 AI 角色",
+          chooseTwo: "请选择 2 个 AI 角色",
           missing: "缺少 {env}",
           unavailable: "不可用",
           targetBlocked: "这个 AI 本回合已经被嘴炮过，等他行动后再来。",
@@ -841,7 +841,7 @@
           passes: "Pass Chain",
           noCards: "None",
           hiddenCards: "hidden",
-          chooseTwo: "Choose 2 available AI models",
+          chooseTwo: "Choose 2 AI models",
           missing: "Missing {env}",
           unavailable: "Unavailable",
           targetBlocked: "This AI has already received table talk this turn.",
@@ -932,11 +932,11 @@
         const data = await res.json();
         characters = data.characters || [];
         selectedCharacters = selectedCharacters.filter((id) =>
-          characters.some((c) => c.id === id && c.available)
+          characters.some((c) => c.id === id)
         );
         for (const c of characters) {
           if (selectedCharacters.length >= 2) break;
-          if (c.available && !selectedCharacters.includes(c.id)) selectedCharacters.push(c.id);
+          if (!selectedCharacters.includes(c.id)) selectedCharacters.push(c.id);
         }
         renderCharacters();
       }
@@ -976,7 +976,7 @@
         root.innerHTML = characters
           .map((c) => {
             const selectedClass = selectedCharacters.includes(c.id) ? " selected" : "";
-            return `<button class="character${selectedClass}" data-character="${c.id}" ${c.available ? "" : "disabled"}>
+            return `<button class="character${selectedClass}" data-character="${c.id}">
               ${escapeHtml(c.name)}
               <small>${c.available ? escapeHtml(c.tagline) : t("missing", { env: c.required_env })}</small>
             </button>`;

@@ -54,9 +54,7 @@ def new_game(req: NewGameRequest):
     global game
     try:
         for character_id in req.ai_characters:
-            character = characters.get_character(character_id)
-            if not characters.is_available(character):
-                raise GameError(f"角色 {character.name} 缺少 {character.api_key_env}")
+            characters.get_character(character_id)
         game = Game(ai_characters=req.ai_characters, output_language=req.output_language)
     except (GameError, KeyError) as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
