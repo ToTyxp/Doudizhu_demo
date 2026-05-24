@@ -18,11 +18,13 @@ Dou Dizhu Demo is a local browser game for testing how different LLMs play Dou D
 - Conda, either Miniconda or Anaconda
 - Python 3.11, created automatically by `run.sh` if the `game_demo` environment does not exist
 
-## Configuration
+## **Configuration**
 
 The server loads environment variables from `.env` and `llm.env` at startup. The local `llm.env` file is intended for real API keys and should not be committed.
 
-Create or edit `llm.env` in the repository root. `.env.example` can be used as a reference for the required variable names, but do not overwrite an existing `llm.env` that already contains real keys.
+**A `.env` or `llm.env` file is not required to start the project.** If no provider API keys are configured, the game can still run, and AI actions fall back to conservative default behavior such as no-bid or pass when the model call cannot be made.
+
+Create or edit `llm.env` in the repository root if you want real LLM opponents. `.env.example` can be used as a reference for the supported variable names, but do not overwrite an existing `llm.env` that already contains real keys.
 
 ```bash
 touch llm.env
