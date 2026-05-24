@@ -14,7 +14,7 @@ Dou Dizhu Demo is a local browser game for testing how different LLMs play Dou D
 
 ## Requirements
 
-- macOS
+- Tested on macOS. Other Unix-like environments may work, but have not been verified.
 - Conda, either Miniconda or Anaconda
 - Python 3.11, created automatically by `run.sh` if the `game_demo` environment does not exist
 
